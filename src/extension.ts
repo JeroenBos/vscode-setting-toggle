@@ -128,10 +128,8 @@ function toggleSetting(toggleTitle: string) {
       return;
     }
 
-    if (typeof state === "boolean") {
-      toggleBoolean(config, settingTitle, state);
-    } else if (typeof state === "number" || typeof state === "string") {
-      toggleCustom(config, settingTitle, state);
+    if (typeof state === "boolean" || typeof state === "number" || typeof state === "string") {
+      toggle(config, settingTitle, state);
     } else {
       vscode.window.showErrorMessage(
         `Setting Toggle: "${settingTitle}" has invalid type: must be boolean, number or string to toggle.`
@@ -142,36 +140,16 @@ function toggleSetting(toggleTitle: string) {
   }
 }
 
-async function toggleBoolean(
+
+async function toggle(
   config: vscode.WorkspaceConfiguration,
   settingTitle: string,
-  oldState: boolean
+  oldState: number | string | boolean
 ) {
-  const newState = !oldState;
-  const isGlobalSetting = true;
+  const settingState1: number | string | boolean = config.get(SettingState1);
+  const settingState2: number | string | boolean = config.get(SettingState2);
 
-  await config.update(settingTitle, newState, isGlobalSetting, true);
-  vscode.window.showInformationMessage(
-    `Setting Toggle: Setting "${settingTitle}" changed to "${newState}".`
-  );
-}
-
-async function toggleCustom(
-  config: vscode.WorkspaceConfiguration,
-  settingTitle: string,
-  oldState: number | string
-) {
-  const settingState1: number | string = config.get(SettingState1);
-  const settingState2: number | string = config.get(SettingState2);
-
-  if (settingState1 === State1Default || settingState2 === State2Default) {
-    vscode.window.showErrorMessage(
-      `Setting Toggle: Set "settingState1" and "settingState2" to toggle non-boolean values.`
-    );
-    return;
-  }
-
-  let newState: number | string;
+  let newState: number | string | boolean;
   // toggle using custom setting values
   if (oldState === settingState1) {
     newState = settingState2;
