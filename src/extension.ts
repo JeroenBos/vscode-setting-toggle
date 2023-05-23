@@ -136,13 +136,7 @@ function toggleSetting(toggleTitle: string) {
       return;
     }
 
-    // if (typeof state === "boolean" || typeof state === "number" || typeof state === "string") {
-      toggle(config, settingTitle, settingSubpath, state);
-    // } else {
-    //   vscode.window.showErrorMessage(
-    //     `Setting Toggle: "${settingTitle}" has invalid type: must be boolean, number or string to toggle.`
-    //   );
-    // }
+    toggle(config, settingTitle, settingSubpath, state);
   } catch (err) {
     vscode.window.showErrorMessage("Setting Toggle: Error: " + err);
   }
