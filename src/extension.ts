@@ -149,16 +149,12 @@ async function toggle(
   settingSubpath: string | undefined,
   oldState: unknown
 ) {
-  console.info(`oldState type: ${typeof oldState}`)
-  console.info(`oldState: ${JSON.stringify(oldState)}`)
-
   const subsettingState1: number | string | boolean = config.get(SettingState1);
   const subsettingState2: number | string | boolean = config.get(SettingState2);
 
   let oldSubstate = getSubstate(oldState, settingSubpath)
   let newSubstate: number | string | boolean;
 
-  console.info(`oldSubstate: ${oldSubstate}`)
   // toggle using custom setting values
   if (oldSubstate === subsettingState1) {
     newSubstate = subsettingState2;
@@ -171,11 +167,7 @@ async function toggle(
       return;
     }
     
-  console.info(`newSubstate: ${newSubstate}`)
-
   const newState = setSubpath(oldState, settingSubpath, newSubstate)
-  console.info(`newState: ${newState}`)
-
   const isGlobalSetting = true;
   await config.update(settingTitle, newState, isGlobalSetting);
   vscode.window.showInformationMessage(
