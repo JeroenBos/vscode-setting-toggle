@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to the "setting-toggle" extension will be documented in this file.
 
+## [1.7.0] (23 May 2023)
+- Enable toggling settings in array elements.
+
 ## [1.6.1] (08 May 2023)
 - Fix bug in `"toggle.iconEnabled"`
 
