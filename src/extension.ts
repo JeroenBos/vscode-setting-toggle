@@ -1,6 +1,8 @@
 "use strict";
 
 import * as vscode from "vscode";
+import * as _ from "./lodash"
+
 // name of setting states and default values specified in package.json
 const SettingState1: string = "toggle.settingState1";
 const SettingState2: string = "toggle.settingState2";
@@ -120,6 +122,12 @@ function toggleSetting(toggleTitle: string) {
       settingTitle = m[2];
     }
 
+    let settingSubpath = undefined;
+    if (settingTitle.includes('[')) {
+      settingSubpath = settingTitle.substring(settingTitle.indexOf('['))
+      settingTitle = settingTitle.substring(0, settingTitle.indexOf('['))
+    }
+
     const state = config.get(settingTitle);
     if (state == undefined) {
       vscode.window.showErrorMessage(
@@ -128,65 +136,53 @@ function toggleSetting(toggleTitle: string) {
       return;
     }
 
-    if (typeof state === "boolean") {
-      toggleBoolean(config, settingTitle, state);
-    } else if (typeof state === "number" || typeof state === "string") {
-      toggleCustom(config, settingTitle, state);
-    } else {
-      vscode.window.showErrorMessage(
-        `Setting Toggle: "${settingTitle}" has invalid type: must be boolean, number or string to toggle.`
-      );
-    }
+    toggle(config, settingTitle, settingSubpath, state);
   } catch (err) {
     vscode.window.showErrorMessage("Setting Toggle: Error: " + err);
   }
 }
 
-async function toggleBoolean(
+
+async function toggle(
   config: vscode.WorkspaceConfiguration,
   settingTitle: string,
-  oldState: boolean
+  settingSubpath: string | undefined,
+  oldState: unknown
 ) {
-  const newState = !oldState;
-  const isGlobalSetting = true;
+  const subsettingState1: number | string | boolean = config.get(SettingState1);
+  const subsettingState2: number | string | boolean = config.get(SettingState2);
 
-  await config.update(settingTitle, newState, isGlobalSetting, true);
-  vscode.window.showInformationMessage(
-    `Setting Toggle: Setting "${settingTitle}" changed to "${newState}".`
-  );
-}
+  let oldSubstate = getSubstate(oldState, settingSubpath)
+  let newSubstate: number | string | boolean;
 
-async function toggleCustom(
-  config: vscode.WorkspaceConfiguration,
-  settingTitle: string,
-  oldState: number | string
-) {
-  const settingState1: number | string = config.get(SettingState1);
-  const settingState2: number | string = config.get(SettingState2);
-
-  if (settingState1 === State1Default || settingState2 === State2Default) {
-    vscode.window.showErrorMessage(
-      `Setting Toggle: Set "settingState1" and "settingState2" to toggle non-boolean values.`
-    );
-    return;
-  }
-
-  let newState: number | string;
   // toggle using custom setting values
-  if (oldState === settingState1) {
-    newState = settingState2;
-  } else if (oldState === settingState2) {
-    newState = settingState1;
+  if (oldSubstate === subsettingState1) {
+    newSubstate = subsettingState2;
+  } else if (oldSubstate === subsettingState2) {
+    newSubstate = subsettingState1;
   } else {
     vscode.window.showErrorMessage(
       `Setting Toggle: State does not match state1 or state2. ${settingTitle} cannot be toggled.`
-    );
-    return;
-  }
-
+      );
+      return;
+    }
+    
+  const newState = setSubpath(oldState, settingSubpath, newSubstate)
   const isGlobalSetting = true;
   await config.update(settingTitle, newState, isGlobalSetting);
   vscode.window.showInformationMessage(
-    `Setting Toggle: ${settingTitle} changed to ${newState}.`
+    `Setting Toggle '${settingTitle}${settingSubpath}' changed to '${newSubstate}'.`
   );
+}
+
+function getSubstate(state: unknown, subpath: string | undefined): unknown {
+  if(subpath === undefined) 
+    return state
+  return _.get(state, subpath, undefined)
+}
+function setSubpath(state: unknown, subpath: string | undefined, value: unknown): unknown {
+  if(subpath === undefined)
+    return state
+  _.set(state, subpath, value)
+  return state
 }
